@@ -1,29 +1,28 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 labels:
-  template: openjdk18-web-basic-s2i-matias
+  template: openjdk18-web-basic-s2i-pipeline
   xpaas: 1.4.12
 message: A new java application has been created in your project.
 metadata:
   annotations:
-    description: An example Java application using OpenJDK 8. For more information
-      about using this template, see https://github.com/jboss-openshift/application-templates.
+    description: Levantar una app con sprinboot ejecutando con openjdk. este template va a crear el dc,bc y pipeline de jenkins. hay que pasarle el git y va a bajar el codigo fuente, compilar y subir el jar.
     iconClass: icon-rh-openjdk
-    openshift.io/display-name: OpenJDK 8 - matias
-    openshift.io/provider-display-name: Red Hat, Inc.
+    openshift.io/display-name: OpenJDK 8 - pipeline
+    openshift.io/provider-display-name: Matiasgonzalocalvo@gmail.com
     tags: java
-    template.openshift.io/documentation-url: https://access.redhat.com/documentation/en/
-    template.openshift.io/long-description: This template defines resources needed
-      to develop Red Hat OpenJDK Java 8 based application.
-    template.openshift.io/support-url: https://access.redhat.com
+    template.openshift.io/documentation-url: https://github.com/matiasgonzalocalvo/devops_openshift
+    template.openshift.io/long-description: OpenJDK Java 8 based application.
+    template.openshift.io/support-url: https://github.com/matiasgonzalocalvo/devops_openshift
     version: 1.4.12
-  name: openjdk18-web-basic-s2i-matias
+  creationTimestamp: null
+  name: openjdk18-web-basic-s2i-pipeline
 objects:
 - apiVersion: v1
   kind: Service
   metadata:
     annotations:
-      description: The application's http port.
+      description: The application's ${APPLICATION_NAME} http port.
     labels:
       application: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
@@ -120,7 +119,7 @@ objects:
         terminationGracePeriodSeconds: 75
     triggers:
     - imageChangeParams:
-        automatic: true
+        automatic: false
         containerNames:
         - ${APPLICATION_NAME}
         from:
@@ -134,8 +133,8 @@ objects:
     annotations:
       pipeline.alpha.openshift.io/uses: '[{"name": "${APPLICATION_NAME}", "namespace": "", "kind": "DeploymentConfig"}]'
     labels:
-      name: sample-pipeline
-    name: sample-pipeline
+      name: ${APPLICATION_NAME}-pipeline
+    name: ${APPLICATION_NAME}-pipeline
   spec:
     strategy:
       jenkinsPipelineStrategy:
@@ -194,40 +193,48 @@ objects:
         secret: secret101
       type: Generic
 parameters:
+
 - description: The name for the application.
   displayName: Application Name
   name: APPLICATION_NAME
   required: true
   value: openjdk-app
+
 - description: 'Custom hostname for http service route.  Leave blank for default hostname,
     e.g.: <application-name>-<project>.<default-domain-suffix>'
   displayName: Custom http Route Hostname
   name: HOSTNAME_HTTP
-- description: The URL of the repository with your application source code.
+
+- description: Git source URI for application
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: https://github.com/matiasgonzalocalvo/web-thymeleaf
-- description: Set this to the relative path to your project if it is not in the root
-    of your repository.
-  displayName: Context Directory
-  name: CONTEXT_DIR
+  value: https://github.com/matiasgonzalocalvo/openjdk_template_openshift
+
 - description: Git branch/tag reference
   displayName: Git Reference
   name: SOURCE_REPOSITORY_REF
   value: master
+
+- description: Path within Git project to build; empty for root project directory.
+  displayName: Context Directory
+  name: CONTEXT_DIR
+  value: 
+
 - description: GitHub trigger secret
   displayName: Github Webhook Secret
   from: '[a-zA-Z0-9]{8}'
   generate: expression
   name: GITHUB_WEBHOOK_SECRET
   required: true
+
 - description: Generic build trigger secret
   displayName: Generic Webhook Secret
   from: '[a-zA-Z0-9]{8}'
   generate: expression
   name: GENERIC_WEBHOOK_SECRET
   required: true
+
 - description: Namespace in which the ImageStreams for Red Hat Middleware images are
     installed. These ImageStreams are normally installed in the openshift namespace.
     You should only need to modify this if you've installed the ImageStreams in a
@@ -236,18 +243,21 @@ parameters:
   name: IMAGE_STREAM_NAMESPACE
   required: true
   value: openshift
+
 - description: Proxy Hostname
   displayName: Proxy Hostname
   name: PROXY_HOSTNAME
   required: false
   value: 10.245.146.29
-- description: Proxy Port
-  displayName: Proxy Port
+
+- description: PROXY PORT
+  displayName: PROXY PORT
   name: PROXY_PORT
   required: false
-  value: 3128
-  #- description: NO Proxy
-  #displayName: no Proxy
-  #name: NO_PROXY
-  #required: false
-  #value: 0,1,2,3,4,5,6,7,8,9
+  value: "3128" 
+
+- description: NO PROXY
+  displayName: NO PROXY
+  name: NO_PROXY
+  required: false
+  value: "0,1,2,3,4,5,6,7,8,9"
