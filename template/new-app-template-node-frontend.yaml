@@ -1,0 +1,221 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  new-app-template: <app-name>-template
+metadata:
+  creationTimestamp: '2019-02-05T14:59:54Z'
+  name: new-app-template-node-frontend
+  namespace: claro-apps
+  resourceVersion: '63472745'
+  selfLink: >-
+    /apis/template.openshift.io/v1/namespaces/claro-apps/templates/new-app-template-node-frontend
+  uid: b230e55d-2956-11e9-b03b-fa163e13ca6d
+objects:
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        description: Realiza un seguimiento de los cambios en la imagen de la aplicación
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: Define cómo construir la aplicación
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      labels:
+        app: '${PARAM_APP_NAME}'
+        build: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}-s2i'
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: '${PARAM_APP_NAME}:latest'
+      source:
+        git:
+          ref: '${PARAM_GIT_BRANCH}'
+          uri: '${PARAM_GIT_PROJECT}/${PARAM_GIT_REPO}.git'
+        sourceSecret:
+          name: '${PARAM_IC_GIT_SECRET}'
+        type: Git
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: 'nodejs:${NODEJS_VERSION}'
+            namespace: openshift
+        type: Source
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+    spec:
+      replicas: 2
+      strategy:
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            deploymentconfig: '${PARAM_APP_NAME}'
+            name: '${PARAM_APP_NAME}'
+        spec:
+          containers:
+            - env:
+                - name: TZ
+                  value: '${TZ}'
+              image: '${PARAM_APP_NAME}:latest'
+              imagePullPolicy: Always
+              name: '${PARAM_APP_NAME}'
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8443
+                  protocol: TCP
+                - containerPort: 8778
+                  protocol: TCP
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+      test: false
+      triggers:
+        - type: ConfigChange
+        - imageChangeParams:
+            automatic: false
+            containerNames:
+              - '${PARAM_APP_NAME}'
+            from:
+              kind: ImageStreamTag
+              name: '${PARAM_APP_NAME}:latest'
+          type: ImageChange
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: Expone y equilibra la carga de los módulos de aplicación
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+    spec:
+      ports:
+        - name: 8080-tcp
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        - name: 8443-tcp
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+        - name: 8778-tcp
+          port: 8778
+          protocol: TCP
+          targetPort: 8778
+      selector:
+        deploymentconfig: '${PARAM_APP_NAME}'
+      sessionAffinity: None
+      type: ClusterIP
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+    spec:
+      host: null
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: '${PARAM_APP_NAME}'
+      weight: 100
+      wildcardPolicy: None
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: >-
+          Permite seleccionar la operación del ciclo de vida que se desea
+          realizar e invoca el pipeline correspondiente.
+      labels:
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}-configure-app'
+    spec:
+      runPolicy: Serial
+      source:
+        contextDir: XP
+        git:
+          ref: develop
+          uri: 'ssh://git@tapias.claro.amx:7999/ic/openshift.git'
+        sourceSecret:
+          name: '${PARAM_IC_GIT_SECRET}'
+        type: Git
+      strategy:
+        jenkinsPipelineStrategy:
+          env:
+            - name: APP_NAME
+              value: '${PARAM_APP_NAME}'
+            - name: GIT_PROJECT
+              value: '${PARAM_GIT_PROJECT}'
+            - name: GIT_REPO
+              value: '${PARAM_GIT_REPO}'
+            - name: GIT_BRANCH
+              value: '${PARAM_GIT_BRANCH}'
+            - name: ARTIFACTORY_REPO
+              value: '${PARAM_ARTIFACTORY_REPO}'
+            - name: IC_GIT_SECRET
+              value: '${PARAM_IC_GIT_SECRET}'
+            - name: TECNOLOGY
+              value: nodejs
+          jenkinsfilePath: jenkinsfile-configure
+        type: JenkinsPipeline
+parameters:
+  - description: Nombre de la aplicación
+    name: PARAM_APP_NAME
+    required: true
+  - description: 'Version of NodeJS image to be used (6, 8, or latest).'
+    displayName: Version of NodeJS Image
+    name: NODEJS_VERSION
+    required: true
+    value: '10'
+  - description: Maximum amount of memory the container can use.
+    displayName: Memory Limit
+    name: MEMORY_LIMIT
+    required: true
+    value: 512Mi
+  - description: URL al proyecto GIT
+    name: PARAM_GIT_PROJECT
+    required: true
+    value: 'ssh://git@tapias.claro.amx:7999/<nombre_proyecto>'
+  - description: Nombre del repositorio GIT
+    name: PARAM_GIT_REPO
+    required: true
+  - description: Branch del repositorio GIT
+    name: PARAM_GIT_BRANCH
+    required: true
+    value: develop
+  - description: Password del project IC en GIT
+    name: PARAM_IC_GIT_SECRET
+    required: true
+    value: bitbucket-ssh-secret
+  - description: Nombre del repositori en Artifactory
+    name: PARAM_ARTIFACTORY_REPO
+    required: true

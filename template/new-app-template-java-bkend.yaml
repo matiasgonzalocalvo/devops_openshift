@@ -1,0 +1,243 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  new-app-template: <app-name>-template
+metadata:
+  creationTimestamp: '2019-02-05T13:54:13Z'
+  name: new-app-template-java-bkend
+  namespace: claro-apps
+  resourceVersion: '67779137'
+  selfLink: >-
+    /apis/template.openshift.io/v1/namespaces/claro-apps/templates/new-app-template-java-bkend
+  uid: 8567f353-294d-11e9-b03b-fa163e13ca6d
+objects:
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        description: Realiza un seguimiento de los cambios en la imagen de la aplicación
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: Define cómo construir la aplicación
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      labels:
+        build: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}-s2i'
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: '${PARAM_APP_NAME}:latest'
+      source:
+        type: Binary
+      strategy:
+        sourceStrategy:
+          env:
+            - name: JAVA_INITIAL_MEM_RATIO
+              value: '100'
+            - name: JAVA_MAX_MEM_RATIO
+              value: '70'
+          from:
+            kind: ImageStreamTag
+            name: 'redhat-openjdk18-openshift:1.5'
+            namespace: openshift
+          scripts: >-
+            http://ribera.claro.amx:8081/artifactory/local-openshift-release/scripts/s2i/openjdk18
+        type: Source
+      type: Source
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+    spec:
+      replicas: 2
+      strategy:
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: '${PARAM_APP_NAME}'
+            deploymentconfig: '${PARAM_APP_NAME}'
+            template: '${PARAM_APP_NAME}-template'
+        spec:
+          containers:
+            - env:
+                - name: TZ
+                  value: '${TZ}'
+              image: '${PARAM_APP_NAME}:latest'
+              imagePullPolicy: Always
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /manage/health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              name: '${PARAM_APP_NAME}'
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8443
+                  protocol: TCP
+                - containerPort: 8778
+                  protocol: TCP
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /manage/health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+      triggers:
+        - type: ConfigChange
+        - imageChangeParams:
+            automatic: false
+            containerNames:
+              - '${PARAM_APP_NAME}'
+            from:
+              kind: ImageStreamTag
+              name: '${PARAM_APP_NAME}:latest'
+          type: ImageChange
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: Expone y equilibra la carga de los módulos de aplicación
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}'
+    spec:
+      ports:
+        - name: 8080-tcp
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        - name: 8443-tcp
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+        - name: 8778-tcp
+          port: 8778
+          protocol: TCP
+          targetPort: 8778
+      selector:
+        deploymentconfig: '${PARAM_APP_NAME}'
+      sessionAffinity: None
+      type: ClusterIP
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      annotations:
+        description: Publica Ruta para acceso externo al servicio para su monitoreo
+      labels:
+        app: '${PARAM_APP_NAME}'
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}-manage'
+    spec:
+      path: /manage
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: '${PARAM_APP_NAME}'
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: >-
+          Permite seleccionar la operación del ciclo de vida que se desea
+          realizar e invoca el pipeline correspondiente.
+      labels:
+        template: '${PARAM_APP_NAME}-template'
+      name: '${PARAM_APP_NAME}-configure-app'
+    spec:
+      runPolicy: Serial
+      source:
+        contextDir: XP
+        git:
+          ref: develop
+          uri: 'ssh://git@tapias.claro.amx:7999/ic/openshift.git'
+        sourceSecret:
+          name: '${PARAM_IC_GIT_SECRET}'
+        type: Git
+      strategy:
+        jenkinsPipelineStrategy:
+          env:
+            - name: APP_NAME
+              value: '${PARAM_APP_NAME}'
+            - name: GIT_PROJECT
+              value: '${PARAM_GIT_PROJECT}'
+            - name: GIT_REPO
+              value: '${PARAM_GIT_REPO}'
+            - name: GIT_BRANCH
+              value: '${PARAM_GIT_BRANCH}'
+            - name: GIT_CONFIG_REPO
+              value: '${PARAM_GIT_CONFIG_REPO}'
+            - name: CONFIG_REPO_PATH
+              value: '${PARAM_CONFIG_REPO_PATH}'
+            - name: ARTIFACTORY_REPO
+              value: '${PARAM_ARTIFACTORY_REPO}'
+            - name: IC_GIT_SECRET
+              value: '${PARAM_IC_GIT_SECRET}'
+            - name: TECNOLOGY
+              value: java
+          jenkinsfilePath: jenkinsfile-configure
+        type: JenkinsPipeline
+parameters:
+  - description: Nombre de la aplicación
+    name: PARAM_APP_NAME
+    required: true
+  - description: URL al proyecto GIT
+    name: PARAM_GIT_PROJECT
+    required: true
+    value: 'ssh://git@tapias.claro.amx:7999/<nombre_proyecto>'
+  - description: Nombre del repositorio GIT
+    name: PARAM_GIT_REPO
+    required: true
+  - description: Branch del repositorio GIT
+    name: PARAM_GIT_BRANCH
+    required: true
+    value: develop
+  - description: Nombre del repositorio de configuraciones
+    name: PARAM_GIT_CONFIG_REPO
+    required: true
+  - description: Ruta en el repo donde se encuentran las configuraciones
+    name: PARAM_CONFIG_REPO_PATH
+  - description: Nombre del repositori en Artifactory
+    name: PARAM_ARTIFACTORY_REPO
+    required: true
+  - description: Password del project IC en GIT
+    name: PARAM_IC_GIT_SECRET
+    required: true
+    value: bitbucket-ssh-secret
