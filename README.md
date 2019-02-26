@@ -1,10 +1,10 @@
 # devops_openshift
 
-# git clone 
+## git clone 
 
-#editar inventory/inventory configurando nodos servidor nfs replicas
+## editar inventory/inventory configurando nodos servidor nfs replicas
 
-#ejecutar prerequisitos
+## ejecutar prerequisitos
 
 ansible-playbook -f 8 -i inventory/inventory /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
 
@@ -28,5 +28,7 @@ https://docs.openshift.com/container-platform/3.3/install_config/adding_hosts_to
 # Test template ##
 
 oc new-project prueba
+
 oc create -f template/openjdk18-template-web-basic-s2i-jenkins.yaml
-oc process openjdk18-web-basic-s2i-pipeline -p NAMESPACE=prueba  | oc create -f -
+
+oc process openjdk18-web-basic-s2i-pipeline -p NAMESPACE=prueba  | oc create -f - -n prueba
