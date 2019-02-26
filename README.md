@@ -29,6 +29,6 @@ https://docs.openshift.com/container-platform/3.3/install_config/adding_hosts_to
 
 oc new-project prueba
 
-oc create -f template/openjdk18-template-web-basic-s2i-jenkins.yaml
+oc create -f template/openjdk18-template-web-basic-s2i-jenkins.yaml -n prueba
 
 oc process openjdk18-web-basic-s2i-pipeline -p NAMESPACE=prueba  | oc create -f - -n prueba
