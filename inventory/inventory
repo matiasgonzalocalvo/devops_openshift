@@ -1,0 +1,199 @@
+#[OSEv3:children]
+[OSEv3:children]
+masters
+nodes
+etcd
+lb
+#new_nodes
+
+[OSEv3:vars]
+#Variables que se reutilizan 
+openshift_master_default_subdomain=oshm-app.clarolab
+#.amx
+
+ansible_ssh_user=root
+openshift_release=v3.9
+openshift_deployment_type=openshift-enterprise
+openshift_enable_unsupported_configurations=True
+openshift_docker_insecure_registries=10.92.248.0/21
+openshift_docker_blocked_registries=docker.io
+openshift_docker_options="--log-driver json-file --log-opt max-size=1M --log-opt max-file=3"
+
+openshift_hosted_registry_cert_expire_days=3650
+openshift_node_cert_expire_days=3650
+openshift_master_cert_expire_days=3650
+etcd_ca_default_days=1825
+openshift_ca_cert_expire_days=1825
+
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=oshm.clarolab
+#.amx
+openshift_master_cluster_public_hostname=oshm.clarolab
+#.amx
+    
+openshift_node_kubelet_args={'pods-per-core': ['100'], 'max-pods': ['250'],'image-gc-high-threshold': ['90'], 'image-gc-low-threshold': ['80']}
+openshift_clock_enabled=true
+
+openshift_master_identity_providers=[{'name': 'LOCAL','login': 'true', 'challenge': 'true','kind': 'HTPasswdPasswordIdentityProvider','filename': '/etc/origin/master/htpasswd'}, {'name': 'CLARO AD','challenge': 'true', 'login': 'true', 'kind':'LDAPPasswordIdentityProvider', 'attributes': {'id': ['cn'], 'email':['mail'], 'name': ['displayName'], 'preferredUsername': ['sAMAccountName']}, 'bindDN': 'CN=Openshift AD,OU=Servicios,OU=Usuarios de CTI,DC=ctimovil,DC=net', 'bindPassword': 'Claro2018', 'ca': '', 'insecure': 'true', 'url': 'ldap://ldap.claro.amx:389/DC=ctimovil,DC=net?sAMAccountName?sub?(memberOf=CN=osen01-Openshift,OU=Acceso a servicios,OU=Grupos de CTI,DC=ctimovil,DC=net)'}]
+
+openshift_master_htpasswd_file=/root/CLARO/htpasswd
+#proxy
+openshift_http_proxy=10.245.146.29:3128
+openshift_https_proxy=10.245.146.29:3128
+openshift_no_proxy="oshm-1-api-int.clarolab,.claro.com.ar,.claro.amx,.clarolab,10.92.112.70,10.92.112.71,10.92.112.72,10.92.112.73,10.92.112.74,10.92.112.75,10.92.112.76,10.92.112.77,.kube-service-catalog.svc"
+openshift_generate_no_proxy_hosts=True
+#proxy=builds
+#openshift_builddefaults_http_proxy=10.245.146.29:3128
+#openshift_builddefaults_https_proxy=10.245.146.29:3128
+#openshift_builddefaults_no_proxy=10.245.146.29:3128
+#openshift_builddefaults_git_http_proxy=10.245.146.29:3128
+#openshift_builddefaults_git_https_proxy=10.245.146.29:3128
+
+#Configuracion personalizada claro
+#openshift_builddefaults_json='{"BuildDefaults":{"configuration":{"apiVersion":"v1","kind":"BuildDefaultsConfig","env":[{"name":"TZ","value":"America/Buenos_Aires"},{"name":"MAVEN_CLEAR_REPO","value":"true"},{"name":"JAVA_INITIAL_MEM_RATIO","value":"100"},{"name":"JAVA_MAX_MEM_RATIO","value":"70"}]}}}'
+####
+openshift_builddefaults_json='{"BuildDefaults":{"configuration":{"apiVersion":"v1","kind":"BuildDefaultsConfig","env":[{"name":"TZ","value":"America/Buenos_Aires"},{"name":"MAVEN_CLEAR_REPO","value":"true"},{"name":"JAVA_INITIAL_MEM_RATIO","value":"100"},{"name":"JAVA_MAX_MEM_RATIO","value":"70"},{"name":"HTTP_PROXY","value":"10.245.146.29:3128"},{"name":"HTTPS_PROXY","value":"10.245.146.29:3128"},{"name":"NO_PROXY","value":"oshm-1-api-int.clarolab,.claro.com.ar,.claro.amx,.clarolab,10.92.112.70,10.92.112.71,10.92.112.72,10.92.112.73,10.92.112.74,10.92.112.75,10.92.112.76,10.92.112.77,.kube-service-catalog.svc"}],"gitHTTPSProxy":"10.245.146.29:3128","gitHTTPProxy":"10.245.146.29:3128","gitNoProxy":"oshm-1-api-int.clarolab,.claro.com.ar,.claro.amx,.clarolab,10.92.112.70,10.92.112.71,10.92.112.72,10.92.112.73,10.92.112.74,10.92.112.75,10.92.112.76,10.92.112.77"}}}'
+#
+
+#openshift_master_image_policy_allowed_registries_for_import=["registry.access.redhat.com", "docker-registry.default.svc"]
+#osm_project_request_template='default/default-project-request'
+#
+#
+
+#para la instalacion en laboratorio
+openshift_disable_check=docker_storage,package_version,disk_availability,docker_image_availability
+
+#webconsole selector
+openshift_web_console_nodeselector={'region':'master'}
+
+# Router Selector
+openshift_router_selector='region=infra'
+openshift_hosted_router_replicas=1
+
+# REGISTRY
+openshift_registry_selector='region=infra'
+
+openshift_hosted_registry_routehost=docker-registry-default.oshm-app.clarolab
+
+openshift_hosted_registry_replicas=1
+openshift_hosted_registry_storage_kind=nfs
+openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+#openshift_hosted_registry_storage_host=nfs.claro.amx
+openshift_hosted_registry_storage_host=10.92.112.76
+openshift_hosted_registry_storage_nfs_directory=/openshift/registry_laboratorio
+openshift_hosted_registry_storage_volume_name=registry
+openshift_hosted_registry_storage_volume_size=30Gi
+
+# Configure the multi-tenant SDN plugin (default is 'redhat/openshift-ovs-subnet')
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+
+# Disable the OpenShift SDN plugin
+# openshift_use_openshift_sdn=False
+
+# Configure SDN cluster network CIDR block. This network block should
+# be a private block and should not conflict with existing network
+# blocks in your infrastructure that pods may require access to.
+# Can not be changed after deployment.
+osm_cluster_network_cidr=10.129.0.0/20
+openshift_master_portal_net=10.92.248.0/21
+
+# Configure number of bits to allocate to each host.s subnet e.g. 8
+# would mean a /24 network on the host.
+osm_host_subnet_length=8
+
+openshift_master_api_port=8443
+openshift_master_console_port=8443
+
+openshift_master_session_name=ssn
+openshift_master_session_max_seconds=3600
+
+# Configure logrotate scripts
+# See: https://github.com/nickhammond/ansible-logrotate
+logrotate_scripts=[{"name": "syslog", "path": "/var/log/cron\n/var/log/maillog\n/var/log/messages\n/var/log/secure\n/var/log/spooler\n", "options": ["daily", "rotate 7", "compress", "sharedscripts", "missingok"], "scripts": {"postrotate": "/bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true"}}]
+
+# METRICS
+
+# Enable Cluster Metrics
+openshift_metrics_install_metrics=true
+
+# Cluster Metrics Storage
+openshift_metrics_hawkular_nodeselector={"region":"infra"}
+openshift_metrics_cassandra_nodeselector={"region":"infra"}
+openshift_metrics_heapster_nodeselector={"region":"infra"}
+#openshift_metrics_hawkular_hostname=hawkular-metrics.osen01-apps-ssl.claro.amx
+openshift_metrics_hawkular_hostname=hawkular-metrics.oshm-app.clarolab.amx
+
+openshift_metrics_storage_kind=nfs
+openshift_metrics_storage_access_modes=['ReadWriteOnce']
+#openshift_metrics_storage_host=nfs.claro.amx
+openshift_metrics_storage_host=10.92.112.76
+openshift_metrics_storage_nfs_directory=/openshift/metrics_laboratorio
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size=30Gi
+
+# LOGGING deployment
+
+openshift_logging_namespace=logging
+openshift_logging_install_logging=true
+openshift_logging_curator_default_days=90
+openshift_logging_kibana_hostname=kibana.oshm-app.clarolab.amx
+openshift_logging_kibana_replica_count=1
+openshift_logging_kibana_nodeselector={"region":"infra"}
+openshift_logging_fluentd_hosts=['--all']
+openshift_logging_es_cluster_size=3
+openshift_logging_es_nodeselector={"region":"infra"}
+openshift_logging_curator_nodeselector={"region":"infra"}
+openshift_master_logging_public_url=https://kibana.oshm-app.clarolab.amx
+openshift_logging_master_public_url=https://oshm.clarolab.amx
+
+
+#SERVICE CATALOG
+openshift_enable_service_catalog=true
+
+openshift_hosted_etcd_storage_kind=nfs
+openshift_hosted_etcd_storage_nfs_directory=/openshift/etcd_laboratorio
+openshift_hosted_etcd_storage_volume_name=etcd-vol2
+#openshift_hosted_etcd_storage_host=nfs.claro.amx
+openshift_hosted_etcd_storage_host=10.92.112.76
+openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
+openshift_hosted_etcd_storage_volume_size=5G
+openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+
+ansible_service_broker_local_registry_whitelist=['.*-apb$']
+
+template_service_broker_selector={"region": "infra"}
+
+#[bastion]
+#ose01-bastion.claro.amx
+
+[masters]
+OSHM-1-master.clarolab.amx
+OSHM-2-master.clarolab.amx
+OSHM-3-master.clarolab.amx
+
+[etcd]
+OSHM-1-master.clarolab.amx
+OSHM-2-master.clarolab.amx
+OSHM-3-master.clarolab.amx
+
+[lb]
+OSHM-7-nodes.clarolab.amx
+
+[infra]
+OSHM-4-infra.clarolab.amx
+OSHM-5-nodes.clarolab.amx
+#OSHM-6-nodes.clarolab.amx
+
+[nodes]
+OSHM-1-master.clarolab.amx openshift_ip=10.92.112.70 openshift_node_labels="{'region': 'master', 'zone': 'olleros'}" openshift_schedulable=true
+OSHM-2-master.clarolab.amx openshift_ip=10.92.112.71 openshift_node_labels="{'region': 'master', 'zone': 'olleros'}" openshift_schedulable=true
+OSHM-3-master.clarolab.amx openshift_ip=10.92.112.72 openshift_node_labels="{'region': 'master', 'zone': 'olleros'}" openshift_schedulable=true
+OSHM-4-infra.clarolab.amx openshift_ip=10.92.112.73 openshift_node_labels="{'region': 'infra','node-role.kubernetes.io/infra': 'true','logging-es-node': '1', 'zone': 'olleros'}" openshift_schedulable=true
+OSHM-5-nodes.clarolab.amx openshift_ip=10.92.112.74 openshift_node_labels="{'region': 'infra','node-role.kubernetes.io/infra': 'true','logging-es-node': '1', 'zone': 'olleros'}" openshift_schedulable=true
+OSHM-6-nodes.clarolab.amx openshift_ip=10.92.112.75 openshift_node_labels="{'region': 'apps', 'zone': 'olleros'}" openshift_schedulable=true
+#OSHM-7-nodes.clarolab.amx openshift_ip=10.92.112.76 openshift_node_labels="{'region': 'apps', 'zone': 'olleros'}" openshift_schedulable=true
+#OSHM-8-nodes.clarolab openshift_ip=10.92.112.77 openshift_node_labels="{'region': 'apps', 'zone': 'olleros'}" openshift_schedulable=true
+
+#[new_nodes]
+#OSHM-8-nodes.clarolab openshift_ip=10.92.112.77 openshift_node_labels="{'region': 'apps', 'zone': 'olleros'}" openshift_schedulable=true
+
