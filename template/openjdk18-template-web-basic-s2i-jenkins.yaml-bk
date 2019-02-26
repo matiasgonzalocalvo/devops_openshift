@@ -45,19 +45,6 @@ objects:
     host: ${HOSTNAME_HTTP}
     to:
       name: ${APPLICATION_NAME}
-
-- apiVersion: v1
-  kind: RoleBinding
-  metadata:
-   name: jenkins
-  roleRef:
-   kind: Role
-   name: edit
-  subjects:
-  - kind: ServiceAccount
-    namespace: cicd
-    name: jenkins
-
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -170,16 +157,16 @@ objects:
             {
               node('maven') 
               {
-                //stage("probando")
-                //{
-                  //def branchs = 'master\ndevelop'
-                  //def branch = input(
-                  //id: 'userInput', message: 'elegi branch?', parameters: [
-                    //[$class: 'ChoiceParameterDefinition', choices: branch, description: 'elegir branch', name: 'choice-branch']
-                  //]
-                  //)
-                  //echo "elegiste el branch ${branch}"
-                //}
+//                stage("probando")
+//                {
+//                  def branchs = 'master\ndevelop'
+//                  def branch = input(
+//                  id: 'userInput', message: 'elegi branch?', parameters: [
+//                    [$class: 'ChoiceParameterDefinition', choices: branch, description: 'elegir branch', name: 'choice-branch']
+//                  ]
+//                  )
+//                  echo "elegiste el branch ${branch}"
+//                }
                 stage("Checkout")
                 {
                   //sh "export "
@@ -209,17 +196,17 @@ objects:
                     }
                   }
                 }
-                //stage("probando aprobacion")
-                //{
-                  //input message: "deployo????. Approve?", id: "approval"
-                  //def userInput = input(
-                    //id: 'userInput', message: 'Let\'s promote?', parameters: [
-                    //[$class: 'TextParameterDefinition', defaultValue: 'por que quiero', description: 'motivo 1 ', name: 'motivo1'],
-                    //[$class: 'TextParameterDefinition', defaultValue: 'poe que otro quiere', description: 'motivo 2', name: 'motivo2']
-                    //])
-                    //echo ("Env: "+userInput['motivo1'])
-                    //echo ("Target: "+userInput['motivo2'])
-                //}
+//                stage("probando aprobacion")
+//                {
+//                  //input message: "deployo????. Approve?", id: "approval"
+//                  def userInput = input(
+//                    id: 'userInput', message: 'Let\'s promote?', parameters: [
+//                    [$class: 'TextParameterDefinition', defaultValue: 'por que quiero', description: 'motivo 1 ', name: 'motivo1'],
+//                    [$class: 'TextParameterDefinition', defaultValue: 'poe que otro quiere', description: 'motivo 2', name: 'motivo2']
+//                    ])
+//                    echo ("Env: "+userInput['motivo1'])
+//                    echo ("Target: "+userInput['motivo2'])
+//                }
                 stage('deploy')
                 {
                   openshift.withCluster()
