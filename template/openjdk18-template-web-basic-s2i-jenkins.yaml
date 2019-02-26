@@ -6,7 +6,7 @@ labels:
 message: A new java application has been created in your project.
 metadata:
   annotations:
-    description: Levantar una app con sprinboot ejecutando con openjdk. este template va a crear el dc,bc y pipeline de jenkins. hay que pasarle el git y va a bajar el codigo fuente, compilar y subir el jar.
+    description: Levantar una app con sprinboot ejecutando con openjdk. este template va a crear el dc,bc y pipeline de jenkins. hay que pasarle el git y va a bajar el codigo fuente, compilar y subir el jar y hacer el deploy.
     iconClass: icon-rh-openjdk
     openshift.io/display-name: OpenJDK 8 - pipeline
     openshift.io/provider-display-name: Matiasgonzalocalvo@gmail.com
@@ -159,18 +159,14 @@ objects:
                     }
                     stage('build Image') {
                       openshift.withCluster() {
-                         openshift.withProject() {
+                        openshift.withProject("${NAMESPACE}") {
                             def bld = openshift.startBuild('${APPLICATION_NAME}',"--from-file=target/ROOT.jar")
-                            bld.untilEach {
-                              return it.object().status.phase == "Running"
-                            }
-                            bld.logs('-f')
                          }  
                       }
                     }
                     stage('deploy') {
                       openshift.withCluster() {
-                        openshift.withProject() {
+                        openshift.withProject("${NAMESPACE}") {
                           def dc = openshift.selector('dc', '${APPLICATION_NAME}')
                           dc.rollout().latest()
                         }
@@ -193,6 +189,11 @@ objects:
         secret: secret101
       type: Generic
 parameters:
+
+- description: NAMESPACE - PROJECTO
+  displayName: PROJECTO DE LA APP
+  name: NAMESPACE
+  required: true
 
 - description: The name for the application.
   displayName: Application Name
@@ -261,3 +262,5 @@ parameters:
   name: NO_PROXY
   required: false
   value: "0,1,2,3,4,5,6,7,8,9"
+
+
