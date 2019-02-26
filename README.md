@@ -20,7 +20,9 @@
 #/usr/share/ansible/openshift-ansible/playbooks/byo/openshift-master/scaleup.yml
 
 
-## Templates ##
+## Test template ##
 
 # oc new-project prueba
-
+# oc adm policy add-cluster-role-to-user edit system:serviceaccount:cicd:jenkins
+# oc create -f template/openjdk18-template-web-basic-s2i-jenkins.yaml
+# oc process openjdk18-web-basic-s2i-pipeline -p NAMESPACE=prueba  | oc create -f -

@@ -54,6 +54,8 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
     labels:
       application: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
@@ -85,6 +87,8 @@ objects:
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
     labels:
       application: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
@@ -132,6 +136,7 @@ objects:
   metadata:
     annotations:
       pipeline.alpha.openshift.io/uses: '[{"name": "${APPLICATION_NAME}", "namespace": "", "kind": "DeploymentConfig"}]'
+      template.alpha.openshift.io/wait-for-ready: "true"
     labels:
       name: ${APPLICATION_NAME}-pipeline
     name: ${APPLICATION_NAME}-pipeline
@@ -146,39 +151,82 @@ objects:
           - name: no_proxy
             value: no_proxy=${NO_PROXY}
         jenkinsfile: |-
-          try {
-             timeout(time: 20, unit: 'MINUTES') {
-                node('maven') {
-                  stage("Checkout") {
-                    sh "export "
-                    git url: "${SOURCE_REPOSITORY_URL}", branch: "${SOURCE_REPOSITORY_REF}"
-                    }
-                  stage('build openjdk') {
-                      sh "ls -atlrh"
-                      sh "mvn clean install -DskipTests -s settings.xml"
-                    }
-                    stage('build Image') {
-                      openshift.withCluster() {
-                        openshift.withProject("${NAMESPACE}") {
-                            def bld = openshift.startBuild('${APPLICATION_NAME}',"--from-file=target/ROOT.jar")
-                         }  
+          try 
+          {
+            timeout(time: 20, unit: 'MINUTES') 
+            {
+              node('maven') 
+              {
+//                stage("probando")
+//                {
+//                  def branchs = 'master\ndevelop'
+//                  def branch = input(
+//                  id: 'userInput', message: 'elegi branch?', parameters: [
+//                    [$class: 'ChoiceParameterDefinition', choices: branch, description: 'elegir branch', name: 'choice-branch']
+//                  ]
+//                  )
+//                  echo "elegiste el branch ${branch}"
+//                }
+                stage("Checkout")
+                {
+                  //sh "export "
+                  git url: "${SOURCE_REPOSITORY_URL}", branch: "${SOURCE_REPOSITORY_REF}"
+                }
+                pom = readMavenPom file: 'pom.xml'
+                stage('build openjdk')
+                {
+                  //sh "ls -atlrh"
+                  sh "mvn clean install -DskipTests -s settings.xml"
+                }
+                stage('build Image')
+                {
+                  openshift.withCluster()
+                  {
+                    try 
+                    {
+                      openshift.withProject("${NAMESPACE}") 
+                      {
+                        //def bld = 
+                        openshift.startBuild('${APPLICATION_NAME}',"--from-file=target/ROOT.jar")
                       }
                     }
-                    stage('deploy') {
-                      openshift.withCluster() {
-                        openshift.withProject("${NAMESPACE}") {
-                          def dc = openshift.selector('dc', '${APPLICATION_NAME}')
-                          dc.rollout().latest()
-                        }
-                      }
+                    catch ( e )
+                    {
+                      "Error encountered: ${e}"
                     }
                   }
-             }
-          } catch (err) {
-             echo "in catch block"
-             echo "Caught: ${err}"
-             currentBuild.result = 'FAILURE'
-             throw err
+                }
+//                stage("probando aprobacion")
+//                {
+//                  //input message: "deployo????. Approve?", id: "approval"
+//                  def userInput = input(
+//                    id: 'userInput', message: 'Let\'s promote?', parameters: [
+//                    [$class: 'TextParameterDefinition', defaultValue: 'por que quiero', description: 'motivo 1 ', name: 'motivo1'],
+//                    [$class: 'TextParameterDefinition', defaultValue: 'poe que otro quiere', description: 'motivo 2', name: 'motivo2']
+//                    ])
+//                    echo ("Env: "+userInput['motivo1'])
+//                    echo ("Target: "+userInput['motivo2'])
+//                }
+                stage('deploy')
+                {
+                  openshift.withCluster()
+                  {
+                    openshift.withProject("${NAMESPACE}")
+                    {
+                      def dc = openshift.selector('dc', '${APPLICATION_NAME}')
+                      dc.rollout().latest()
+                    }
+                  }
+                }
+              }
+            }
+          }
+          catch (err)
+          {
+            echo "in catch block"
+            echo "Caught: ${err}"
+            currentBuild.result = 'FAILURE'
+            throw err
           }          
       type: JenkinsPipeline
     triggers:
