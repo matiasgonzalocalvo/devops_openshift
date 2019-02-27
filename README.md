@@ -1,10 +1,10 @@
 # devops_openshift
 
-## git clone 
+git clone 
 
-## editar inventory/inventory configurando nodos servidor nfs replicas
+editar inventory/inventory configurando nodos servidor nfs replicas
 
-## ejecutar prerequisitos
+# ejecutar prerequisitos
 
 ansible-playbook -f 8 -i inventory/inventory /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
 
@@ -23,6 +23,16 @@ https://docs.openshift.com/container-platform/3.3/install_config/adding_hosts_to
 ## nodo master
 
 /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-master/scaleup.yml
+
+# CICD 
+
+oc new-project cicd
+
+oc create  -f template/pv-jenkins.yaml
+
+oc process jenkins-persistent -n openshift | oc create -f - -n cicd
+
+edit jenkins para que pueda ver el proyecto prueba  Jenkins - Configuración - OpenShift Jenkins Sync - Namespace 
 
 
 # Test template ##

@@ -94,9 +94,6 @@ objects:
     - generic:
         secret: ${GENERIC_WEBHOOK_SECRET}
       type: Generic
-    - imageChange: {}
-      type: ImageChange
-    - type: ConfigChange
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -172,6 +169,12 @@ objects:
               {
                 //stage("probando")
                 //{
+                    //def feedback = input (
+                    //message: 'prueba ?',
+                    //submitterParameter: 'submitter',
+                    //submitter: 'root-admin' 
+                    //)
+                  //echo "It was ${feedback} who submitted the dialog."
                   //def branchs = 'master\ndevelop'
                   //def branch = input(
                   //id: 'userInput', message: 'elegi branch?', parameters: [
@@ -191,6 +194,12 @@ objects:
                   //sh "ls -atlrh"
                   sh "mvn clean install -DskipTests -s settings.xml"
                 }
+                stage('Unit Test')
+                {
+                  //sh "ls -atlrh"
+                  //sh "mvn test -s settings.xml"
+                  echo "aca ejecutar test"
+                }
                 stage('build Image')
                 {
                   openshift.withCluster()
@@ -199,8 +208,9 @@ objects:
                     {
                       openshift.withProject("${NAMESPACE}") 
                       {
+                        echo "Using project: ${openshift.project()}"
                         //def bld = 
-                        openshift.startBuild('${APPLICATION_NAME}',"--from-file=target/ROOT.jar")
+                        openshift.startBuild('${APPLICATION_NAME}',"--from-file=target/ROOT.jar", '--follow', "--wait=true")
                       }
                     }
                     catch ( e )
@@ -230,6 +240,22 @@ objects:
                       dc.rollout().latest()
                       sh "sleep 2"
                       dc.rollout().status()
+                    }
+                  }
+                }
+                stage('tag') 
+                {
+                  steps 
+                  {
+                    script 
+                    {
+                      openshift.withCluster()
+                      {
+                        openshift.withProject("${NAMESPACE}")
+                        {
+                          openshift.tag("${APPLICATION_NAME}:latest", "${APPLICATION_NAME}-staging:latest") 
+                        }
+                      }
                     }
                   }
                 }
