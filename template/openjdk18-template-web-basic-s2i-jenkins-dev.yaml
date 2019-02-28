@@ -219,7 +219,7 @@ objects:
                 stage("release")
                 {
                   sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true"
-                  sh "mvn -B release:perform -B -s settings.xml -DskipTests=true
+                  sh "mvn -B release:perform -B -s settings.xml -DskipTests=true"
                 }
                 stage('build Image')
                 {
