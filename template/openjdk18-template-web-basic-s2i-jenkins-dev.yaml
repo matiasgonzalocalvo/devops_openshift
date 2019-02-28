@@ -220,11 +220,6 @@ objects:
                         echo "analicis con sonar"
                         //sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true -X"
                 }
-                //stage('NEXUS')
-                //{
-                  //echo "nexus"
-                  //sh "mvn deploy -DskipTests=true -X"
-                //}
                 stage("release prepare")
                 {
                   sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true -X"
