@@ -198,28 +198,28 @@ objects:
                 stage('build openjdk')
                 {
                   //sh "ls -atlrh"
-                  sh "mvn clean install -DskipTests -s settings.xml"
+                  sh "mvn clean install -DskipTests -s settings.xml -X"
                 }
                 stage('Unit Test')
                 {
                   //sh "ls -atlrh"
-                  //sh "mvn test -s settings.xml"
+                  //sh "mvn test -s settings.xml -X "
                   echo "aca ejecutar test"
                 }
                 stage("Analicis de codigo sonar")
                 {
                         echo "analicis con sonar"
-                        //sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true"
+                        //sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true -X"
                 }
                 //stage('NEXUS')
                 //{
                   //echo "nexus"
-                  //sh "mvn deploy -DskipTests=true"
+                  //sh "mvn deploy -DskipTests=true -X"
                 //}
                 stage("release")
                 {
-                  sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true"
-                  sh "mvn -B release:perform -B -s settings.xml -DskipTests=true"
+                  sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true -X"
+                  sh "mvn -B release:perform -B -s settings.xml -DskipTests=true -X"
                 }
                 stage('build Image')
                 {
