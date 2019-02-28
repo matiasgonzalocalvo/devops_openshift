@@ -209,12 +209,17 @@ objects:
                 stage("Analicis de codigo sonar")
                 {
                         echo "analicis con sonar"
-                        #sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true"
+                        //sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true"
                 }
-                stage('NEXUS')
+                //stage('NEXUS')
+                //{
+                  //echo "nexus"
+                  //sh "mvn deploy -DskipTests=true"
+                //}
+                stage("release")
                 {
-                  echo "nexus"
-                  #sh "mvn deploy -DskipTests=true -P nexus3"
+                  sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true"
+                  sh "mvn -B release:perform -B -s settings.xml -DskipTests=true
                 }
                 stage('build Image')
                 {
