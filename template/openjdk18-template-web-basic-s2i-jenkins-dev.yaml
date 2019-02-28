@@ -211,7 +211,7 @@ objects:
                   //sh "mvn test -s settings.xml -X "
                   echo "aca ejecutar test"
                 }
-                stage("Analicis de codigo sonar")
+                stage("Analisis de codigo sonar")
                 {
                         echo "analicis con sonar"
                         //sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true -X"
@@ -221,9 +221,12 @@ objects:
                   //echo "nexus"
                   //sh "mvn deploy -DskipTests=true -X"
                 //}
-                stage("release")
+                stage("release prepare")
                 {
                   sh "mvn -B release:prepare -B -s settings.xml -DskipTests=true -X"
+                }
+                stage("release perform")
+                {
                   sh "mvn -B release:perform -B -s settings.xml -DskipTests=true -X"
                 }
                 stage('build Image')
