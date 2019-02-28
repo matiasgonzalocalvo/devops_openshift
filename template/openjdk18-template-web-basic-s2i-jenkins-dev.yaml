@@ -190,7 +190,11 @@ objects:
                   //sh "export "
                   git url: "${SOURCE_REPOSITORY_URL}", branch: "${SOURCE_REPOSITORY_REF}"
                 }
-                pom = readMavenPom file: 'pom.xml'
+                stage("read version")
+                {
+                  pom = readMavenPom file: 'pom.xml'
+                  version = pom.version
+                }
                 stage('build openjdk')
                 {
                   //sh "ls -atlrh"
@@ -201,6 +205,16 @@ objects:
                   //sh "ls -atlrh"
                   //sh "mvn test -s settings.xml"
                   echo "aca ejecutar test"
+                }
+                stage("Analicis de codigo sonar")
+                {
+                        echo "analicis con sonar"
+                        #sh "mvn sonar:sonar -Dsonar.host.url=http://sonarqube:9000 -DskipTests=true"
+                }
+                stage('NEXUS')
+                {
+                  echo "nexus"
+                  #sh "mvn deploy -DskipTests=true -P nexus3"
                 }
                 stage('build Image')
                 {
@@ -251,7 +265,9 @@ objects:
                   {
                     openshift.withProject("${NAMESPACE}")
                     {
-                      openshift.tag("${APPLICATION_NAME}:latest", "${APPLICATION_NAME}-staging:latest") 
+                      echo "${pom}"
+                      echo "${version}"
+                      openshift.tag("${APPLICATION_NAME}:latest", "${APPLICATION_NAME}:${version}") 
                     }
                   }
                 }
