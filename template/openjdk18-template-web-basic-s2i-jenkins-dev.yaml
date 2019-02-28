@@ -188,7 +188,12 @@ objects:
                 stage("Checkout")
                 {
                   //sh "export "
-                  git url: "${SOURCE_REPOSITORY_URL}", branch: "${SOURCE_REPOSITORY_REF}"
+                  sh 'git config --global user.email "matiasgonzalocalvo@gmail.com"'
+                  git 
+                  (
+                    url: "${SOURCE_REPOSITORY_URL}", 
+                    branch: "${SOURCE_REPOSITORY_REF}"
+                  )
                 }
                 stage("read version")
                 {
