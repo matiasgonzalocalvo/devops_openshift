@@ -1,0 +1,14 @@
+---
+- name: check templates default exist
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get templates -n default  -o=custom-columns=NAME:.metadata.name | grep -v -e "NAME" |grep "^default-project-request$"
+  register: result
+  ignore_errors: yes
+
+- name: copy template 
+  copy: src=default-project-request.yaml dest=/tmp/default-project-request.yaml
+  when: result.stdout != "default-project-request"
+
+- name: create default project
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc create -f /tmp/default-project-request.yaml
+  when: result.stdout != "default-project-request"
+

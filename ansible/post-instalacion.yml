@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  roles:
+    - config-openshift
+
+- hosts: master
+  roles:
+    - post-instalacion

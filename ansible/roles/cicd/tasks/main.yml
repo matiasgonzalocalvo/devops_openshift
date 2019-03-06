@@ -1,0 +1,19 @@
+---
+- name: oc get projects
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc projects -q|grep "^{{ name_project_cicd }}$"
+  register: result
+  ignore_errors: yes
+
+- name: create project {{ name_project_cicd }}
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc new-project {{ name_project_cicd }}
+  when: result.stdout != name_project_cicd
+
+
+- name: oc get projects
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get dc jenkins -o=custom-columns=NAME:.metadata.name|grep -v NAME|grep "^{{ jenkins }}$"
+  register: result
+  ignore_errors: yes
+
+- name: create project {{ name_project_cicd }}
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc process jenkins-persistent -n openshift | oc create -f - -n {{ name_project_cicd }}
+  when: result.stdout != jenkins

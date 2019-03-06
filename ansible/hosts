@@ -1,0 +1,15 @@
+[hosts]
+localhost
+
+[master]
+OSHM-1-master.clarolab.amx
+OSHM-2-master.clarolab.amx
+OSHM-3-master.clarolab.amx
+
+[nodos]
+OSHM-4-infra.clarolab.amx
+OSHM-5-nodes.clarolab.amx
+OSHM-6-nodes.clarolab.amx
+OSHM-7-nodes.clarolab.amx
+OSHM-8-nodes.clarolab
+

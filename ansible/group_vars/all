@@ -1,0 +1,5 @@
+http_port: 8080
+http_proxy:
+
+name_project_cicd: "cicd" 
+jenkins: "jenkins"
