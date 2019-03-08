@@ -3,3 +3,11 @@ http_proxy:
 
 name_project_cicd: "cicd" 
 jenkins: "jenkins"
+
+nfs_pv_server: "10.92.112.76"
+
+jenkins_project_name: "cicd"
+jenkins_dc_name: "jenkins"
+jenkins_path_nfs: "/openshift/jenkins/pv/"
+jenkins_capacity_storage: "5Gi"
+jenkins_pv_name: "jenkins-pv"

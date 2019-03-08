@@ -14,6 +14,21 @@
   register: result
   ignore_errors: yes
 
+- name: verify pv 
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get pv |awk '{if ( "Available" == $5 ) {print $0} }'|wc -l
+  register: pvresult
+  when: result.stdout != jenkins
+
+- name: Copy template pv
+  template:
+    src: pv-template.yaml.j2
+    dest: /tmp/pv-template.yaml
+  when: pvresult == 0
+
+- name: create pv para jenkins
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc create -f  /tmp/pv-template.yaml
+  when: pvresult == 0
+
 - name: oc create jenkins persistent
   shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc process jenkins-persistent -n openshift | oc create -f - -n {{ name_project_cicd }}
   when: result.stdout != jenkins

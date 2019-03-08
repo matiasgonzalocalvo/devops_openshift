@@ -1,0 +1,16 @@
+bjects:
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ jenkins_pv_name }}
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: {{ jenkins_capacity_storage }}
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    path: {{ jenkins_path_nfs }}
+    server: {{ nfs_pv_server }}
+  persistentVolumeReclaimPolicy: Recycle
