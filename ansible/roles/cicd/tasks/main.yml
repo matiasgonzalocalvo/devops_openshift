@@ -9,6 +9,15 @@
   when: result.stdout != name_project_cicd
 
 
+- name: verify si existe quota 
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get quota -n {{ name_project_cicd }} -o=custom-columns=NAME:.metadata.name |grep -v NAME|wc -l
+  register: quota
+  when: result.stdout != name_project_cicd
+
+- name: delete quota
+  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc delete quota $(oc get quota -o=custom-columns=NAME:.metadata.name -n {{ name_project_cicd }}|grep -v NAME) -n {{ name_project_cicd }}
+  when: quota.stdout > 0
+
 - name: oc get dc jenkins
   shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get dc -o=custom-columns=NAME:.metadata.name -n {{ name_project_cicd }} |grep "^{{ jenkins }}$"
   register: result
@@ -28,7 +37,6 @@
 - name: create pv para jenkins
   shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc create -f  /tmp/pv-template.yaml
   when: pvresult.stdout == "0"
-
 
 - name: oc create jenkins persistent
   shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc process jenkins-persistent -n openshift | oc create -f - -n {{ name_project_cicd }}
