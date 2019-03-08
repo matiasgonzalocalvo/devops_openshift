@@ -33,12 +33,12 @@
   shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc process jenkins-persistent -n openshift | oc create -f - -n {{ name_project_cicd }}
   when: result.stdout != jenkins
 
-- name: oc get dc nexus
-  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get dc -o=custom-columns=NAME:.metadata.name -n {{ name_project_cicd }} |grep "^nexus3$"
-  register: result
-  ignore_errors: yes
+#- name: oc get dc nexus
+#  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc get dc -o=custom-columns=NAME:.metadata.name -n {{ name_project_cicd }} |grep "^nexus3$"
+#  register: result
+#  ignore_errors: yes
 
-- name: oc create jenkins persistent
-  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc new-app registry.hub.docker.com/sonatype/nexus3
-  when: result.stdout != jenkins
+#- name: oc create jenkins persistent
+#  shell: export https_proxy={{ http_proxy }} http_proxy={{ http_proxy }} ftp_proxy={{ http_proxy }} ; oc new-app registry.hub.docker.com/sonatype/nexus3
+#  when: result.stdout != nexus3
 
