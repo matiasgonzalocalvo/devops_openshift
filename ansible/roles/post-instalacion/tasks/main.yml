@@ -1,14 +1,14 @@
 ---
 - name: jenkinsPipelineConfig
   lineinfile:
-    path: "/tmp/master-config.yaml"
+    path: "/etc/origin/master/master-config.yaml"
     regexp: "^jenkinsPipelineConfig:"
     insertbefore: '^kind: MasterConfig$'
     line: 'jenkinsPipelineConfig:'
 
 - name: jenkinsPipelineConfig2
   lineinfile:
-    path: "/tmp/master-config.yaml"
+    path: "/etc/origin/master/master-config.yaml"
     regexp: "^  autoProvisionEnabled:"
     insertafter: '^jenkinsPipelineConfig:$'
     line: '  autoProvisionEnabled: false'
