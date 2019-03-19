@@ -193,7 +193,7 @@ objects:
                 {
                   //sh "export "
                   sh 'git config --global user.email "matiasgonzalocalvo@gmail.com"'
-                  git 
+                  git
                   (
                     url: "${SOURCE_REPOSITORY_URL}", 
                     branch: "${SOURCE_REPOSITORY_REF}"
@@ -385,10 +385,12 @@ parameters:
 - description: GIT USER
   displayName: GIT USER
   name: GIT_USER
+  value: "username"
   required: false
 
 - description: GIT PASS
   displayName: GIT PASS
   name: GIT_PASS
+  value: "password"
   required: false
 
