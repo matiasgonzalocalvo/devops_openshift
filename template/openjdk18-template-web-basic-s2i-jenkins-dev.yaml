@@ -195,7 +195,7 @@ objects:
                   sh 'git config --global user.email "matiasgonzalocalvo@gmail.com"'
                   git
                   (
-                    url: "${SOURCE_REPOSITORY_URL}", 
+                    url: "${SOURCE_REPOSITORY_URL}",
                     branch: "${SOURCE_REPOSITORY_REF}"
                   )
                 }
